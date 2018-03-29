@@ -1,5 +1,6 @@
 package com.example.meesh.labsession7;
 
+import android.app.ProgressDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ListView;
@@ -19,6 +20,10 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private String urlJsonData="https://api.androidhive.info/volley/person_array.json";
     RequestQueue queue=null;
+    private ProgressDialog pDialog;
+    private ListView listView;
+    private ArrayList<DataModel> list;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +32,33 @@ public class MainActivity extends AppCompatActivity {
 
         queue = Volley.newRequestQueue(this);
 
-        ListView listView=(ListView)findViewById(R.id.list);
-        final ArrayList<DataModel> list=new ArrayList<>();
+         listView=(ListView)findViewById(R.id.list);
+         list=new ArrayList<>();
+
+        pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
+
+        jsonRequest();
+    }
+    private void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+
+    private void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
+    }
+
+
+    public void jsonRequest()
+    {
+        showpDialog();
         JsonArrayRequest json= new JsonArrayRequest(urlJsonData, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray jsonArray) {
-
+                hidepDialog();
                 for (int i = 0; i < jsonArray.length(); i++) {
                     try {
                         JSONObject person = (JSONObject) jsonArray.get(i);
@@ -49,17 +75,17 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+                final customAdapter adp =new customAdapter(MainActivity.this,R.layout.customlist,list);
+                listView.setAdapter(adp);
                 }
             }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
+                hidepDialog();
 
             }
         });
 
-
-        final customAdapter adp =new customAdapter(this,R.layout.customlist,list);
-        listView.setAdapter(adp);
         queue.add(json);
     }
 }
